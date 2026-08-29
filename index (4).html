@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Sandbox Day</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+<style id="app-styles"></style>
+</head>
+<body>
+
+  <div id="sky" aria-hidden="true">
+    <div id="sky-gradient"></div>
+    <div id="sun"></div>
+    <div id="horizon"></div>
+  </div>
+
+  <!-- ░░ ONBOARDING — Alter Ego Creator (first run only) ░░ -->
+  <section class="screen active" id="screen-onboard">
+    <p class="eyebrow">before you sandbox anything</p>
+    <h1 class="display">Who's playing today<span class="dot">?</span></h1>
+    <p class="lede">Make a quick Alter Ego. It's the character who lives out your blueprint — not the real you, the one you're aiming at.</p>
+
+    <div class="onboard-grid">
+      <div>
+        <label class="field-label" for="input-name">Their name</label>
+        <input class="field-input" id="input-name" maxlength="24" placeholder="Cozy Artist Me">
+      </div>
+
+      <div>
+        <label class="field-label">Pick their mark</label>
+        <div class="emoji-grid" id="emoji-grid"></div>
+      </div>
+
+      <div>
+        <label class="field-label">Pick their vibe</label>
+        <div class="vibe-grid" id="vibe-grid"></div>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" id="btn-create-ego">Create & enter the sandbox →</button>
+  </section>
+
+  <!-- ░░ MAIN APP ░░ -->
+  <div id="app-shell">
+    <nav id="tabbar">
+      <button class="tab active" data-tab="home">Home</button>
+      <button class="tab" data-tab="blueprint">Blueprint</button>
+      <button class="tab" data-tab="today">Today</button>
+      <button class="tab" data-tab="vibecheck">Vibe Check</button>
+      <button class="tab" data-tab="stats">Stats</button>
+    </nav>
+
+    <!-- HOME -->
+    <section class="screen" id="screen-home">
+      <div class="ego-card" id="ego-card"></div>
+      <p class="eyebrow" style="margin-top:2.2rem;">right now</p>
+      <p class="now-line" id="now-line">—</p>
+      <div id="home-today-preview"></div>
+    </section>
+
+    <!-- BLUEPRINT -->
+    <section class="screen" id="screen-blueprint">
+      <p class="eyebrow">your template — build it once, run it daily</p>
+      <h2 class="display section-title">The Blueprint</h2>
+      <p class="lede small">Tap a block, then tap an hour to place it. (Mouse users can drag too.) One block per hour.</p>
+
+      <div class="library" id="block-library"></div>
+
+      <div class="timeline" id="blueprint-timeline"></div>
+
+      <div class="brainstorm">
+        <p class="eyebrow">stuck?</p>
+        <p class="lede small" style="margin-bottom:.8rem;">Give it three words. Get a starting point — not an answer.</p>
+        <div class="brainstorm-row">
+          <input class="field-input" id="brainstorm-input" placeholder="tired, creative, rainy">
+          <button class="btn btn-ghost" id="btn-brainstorm">Brainstorm my vibe ✦</button>
+        </div>
+        <p class="brainstorm-output" id="brainstorm-output"></p>
+      </div>
+    </section>
+
+    <!-- TODAY -->
+    <section class="screen" id="screen-today">
+      <p class="eyebrow" id="today-date">—</p>
+      <h2 class="display section-title">Today's Quest Log</h2>
+      <div id="today-list"></div>
+    </section>
+
+    <!-- VIBE CHECK -->
+    <section class="screen" id="screen-vibecheck">
+      <p class="eyebrow">end of day</p>
+      <h2 class="display section-title">Vibe Check</h2>
+      <p class="lede small">How close did today land to the blueprint?</p>
+
+      <div class="slider-block">
+        <input type="range" min="0" max="100" value="50" id="vibe-slider">
+        <p class="slider-readout"><span id="vibe-pct">50</span>% perfect</p>
+      </div>
+
+      <p class="field-label" style="margin-top:1.6rem;">Mood</p>
+      <div class="mood-grid" id="mood-grid"></div>
+
+      <label class="field-label" style="margin-top:1.6rem;" for="vibe-note">One line, optional</label>
+      <textarea class="field-input" id="vibe-note" rows="2" maxlength="140" placeholder="what made or broke today"></textarea>
+
+      <button class="btn btn-primary" id="btn-submit-vibe" style="margin-top:1.6rem;">Log today ↓</button>
+      <p class="vibe-confirm" id="vibe-confirm"></p>
+    </section>
+
+    <!-- STATS -->
+    <section class="screen" id="screen-stats">
+      <p class="eyebrow">your sandbox, over time</p>
+      <h2 class="display section-title">Stats</h2>
+
+      <div class="streak-row" id="streak-row"></div>
+
+      <p class="field-label" style="margin-top:1.8rem;">Levels</p>
+      <div id="level-bars"></div>
+
+      <p class="field-label" style="margin-top:1.8rem;">Recent days</p>
+      <div id="journal-list"></div>
+    </section>
+  </div>
+
+  <script id="app-script"></script>
+</body>
+</html>
