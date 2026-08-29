@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Sandbox Day</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   MY SANDBOX DAY — same design language as Diurnal:
+   dusk palette, Fraunces + Space Grotesk, a living sky that
+   now tracks *real* time instead of quiz progress.
+   ============================================================ */
+
+:root{
+  --void:      #0f1226;
+  --dusk-1:    #2c1250;
+  --dusk-2:    #6c3483;
+  --coral:     #f2765b;
+  --gold:      #f5b942;
+  --mint:      #8fd3c7;
+  --violet:    #b189d8;
+  --paper:     #fbf3e7;
+  --ink:       #1b1235;
+  --line:      rgba(251, 243, 231, 0.16);
+  --font-display: 'Fraunces', serif;
+  --font-ui: 'Space Grotesk', sans-serif;
+  --ease: cubic-bezier(.22,.61,.36,1);
+}
+
+*{ box-sizing:border-box; margin:0; padding:0; }
+html, body{ height:100%; }
+body{
+  font-family: var(--font-ui);
+  color: var(--paper);
+  background: var(--void);
+  min-height:100vh;
+}
+button{ font-family: inherit; cursor:pointer; }
+::selection{ background: var(--coral); color: var(--ink); }
+
+/* ---------- living sky (now driven by the real clock) ---------- */
+
+#sky{ position:fixed; inset:0; z-index:0; overflow:hidden; }
+#sky-gradient{
+  position:absolute; inset:0;
+  background: linear-gradient(180deg, #0f1226 0%, #2c1250 55%, #6c3483 100%);
+  transition: background 2s var(--ease);
+}
+#sun{
+  position:absolute; width:64px; height:64px; border-radius:50%;
+  left:8%; top:78%;
+  background: radial-gradient(circle at 35% 30%, #fff8e6, var(--gold) 55%, var(--coral) 100%);
+  box-shadow: 0 0 90px 20px rgba(245,185,66,.3);
+  transition: left 2s var(--ease), top 2s var(--ease), background 2s var(--ease);
+}
+#horizon{
+  position:absolute; left:0; right:0; bottom:0; height:30vh;
+  background: var(--ink); opacity:.88;
+  clip-path: polygon(0% 40%, 6% 34%, 14% 44%, 24% 30%, 33% 42%, 44% 26%, 55% 40%, 66% 30%, 77% 44%, 88% 32%, 100% 40%, 100% 100%, 0% 100%);
+}
+#sky::after{
+  content:""; position:absolute; inset:0;
+  background-image: radial-gradient(rgba(255,255,255,0.5) 0.6px, transparent 0.6px);
+  background-size: 3px 3px; opacity:.045; pointer-events:none;
+}
+
+/* ---------- layout ---------- */
+
+.screen{ display:none; position:relative; z-index:1; min-height:100vh; padding: 6vh 7vw 10vh; flex-direction:column; align-items:flex-start; }
+.screen.active{ display:flex; }
+#screen-onboard.active{ justify-content:center; }
+
+#app-shell{ position:relative; z-index:1; }
+
+.eyebrow{ font-family: var(--font-ui); text-transform:uppercase; letter-spacing:.2em; font-size:.72rem; color: var(--mint); margin-bottom: 1rem; }
+.display{ font-family: var(--font-display); font-weight:500; }
+.section-title{ font-size: clamp(1.8rem, 4vw, 2.6rem); margin-bottom: .6rem; }
+
+.lede{ max-width:48ch; font-size:1.02rem; line-height:1.6; color:rgba(251,243,231,.72); margin-bottom:1.8rem; }
+.lede.small{ font-size:.92rem; margin-bottom:1.2rem; }
+
+h1.display{ font-size: clamp(2.2rem, 6vw, 4.2rem); line-height:1.05; max-width:16ch; }
+.dot{ color: var(--coral); }
+
+/* ---------- buttons / fields ---------- */
+
+.btn{ border-radius:999px; padding:.9rem 1.9rem; font-size:.92rem; font-weight:500; border:1px solid var(--line); transition: transform .3s var(--ease), background .3s var(--ease), border-color .3s var(--ease); }
+.btn:hover{ transform: translateY(-2px); }
+.btn:focus-visible{ outline:2px solid var(--gold); outline-offset:3px; }
+.btn-primary{ background: var(--coral); color: var(--ink); border-color: var(--coral); }
+.btn-primary:hover{ background: var(--gold); border-color: var(--gold); }
+.btn-ghost{ background:transparent; color: var(--paper); }
+.btn-ghost:hover{ border-color: var(--paper); }
+
+.field-label{ display:block; font-size:.76rem; text-transform:uppercase; letter-spacing:.14em; color:rgba(251,243,231,.55); margin-bottom:.5rem; }
+.field-input{
+  width:100%; background: rgba(251,243,231,.05); border:1px solid var(--line); border-radius:10px;
+  padding:.8rem 1rem; color:var(--paper); font-family:inherit; font-size:.95rem; resize:vertical;
+}
+.field-input:focus{ outline:none; border-color: var(--mint); }
+
+/* ---------- onboarding ---------- */
+
+.onboard-grid{ display:flex; flex-direction:column; gap:1.6rem; max-width:520px; margin-bottom:2.2rem; width:100%; }
+
+.emoji-grid, .vibe-grid{ display:flex; flex-wrap:wrap; gap:.6rem; }
+.pill-choice{
+  padding:.6rem 1rem; border-radius:999px; border:1px solid var(--line); background:rgba(251,243,231,.04);
+  color:var(--paper); font-size:1rem; transition: border-color .25s var(--ease), background .25s var(--ease), transform .2s var(--ease);
+}
+.pill-choice:hover{ border-color: var(--mint); }
+.pill-choice.selected{ border-color: var(--gold); background: rgba(245,185,66,.14); transform: translateY(-1px); }
+.vibe-grid .pill-choice{ font-family: var(--font-ui); font-size:.86rem; }
+
+/* ---------- tabs ---------- */
+
+#tabbar{
+  position:sticky; top:0; z-index:5; display:flex; gap:.4rem; padding:1.2rem 7vw;
+  background: rgba(15,18,38,.55); backdrop-filter: blur(10px); border-bottom:1px solid var(--line); overflow-x:auto;
+}
+.tab{
+  background:transparent; border:1px solid transparent; color:rgba(251,243,231,.55);
+  font-size:.86rem; padding:.5rem 1rem; border-radius:999px; white-space:nowrap; transition: color .25s var(--ease), border-color .25s var(--ease), background .25s var(--ease);
+}
+.tab:hover{ color: var(--paper); }
+.tab.active{ color: var(--ink); background: var(--paper); border-color: var(--paper); font-weight:500; }
+
+/* ---------- home ---------- */
+
+.ego-card{
+  display:flex; align-items:center; gap:1.1rem; padding:1.4rem 1.6rem; border-radius:16px;
+  border:1px solid var(--line); background: rgba(251,243,231,.04); max-width:480px;
+}
+.ego-card .ego-emoji{ font-size:2.4rem; }
+.ego-card .ego-name{ font-family:var(--font-display); font-size:1.3rem; }
+.ego-card .ego-vibe{ font-size:.8rem; color:rgba(251,243,231,.55); }
+
+.now-line{ font-family: var(--font-display); font-style:italic; font-size:1.4rem; max-width:36ch; }
+
+#home-today-preview{ margin-top:2rem; width:100%; max-width:560px; }
+
+/* ---------- library + timeline ---------- */
+
+.library{ display:flex; flex-wrap:wrap; gap:.6rem; margin-bottom:2.2rem; }
+.block-card{
+  display:flex; align-items:center; gap:.5rem; padding:.65rem 1rem; border-radius:12px;
+  border:1px solid var(--line); background: rgba(251,243,231,.04); font-size:.86rem;
+  transition: border-color .25s var(--ease), transform .2s var(--ease), background .25s var(--ease);
+}
+.block-card:hover{ transform: translateY(-2px); }
+.block-card.selected{ border-color: var(--gold); background: rgba(245,185,66,.16); }
+.block-card .swatch{ width:8px; height:8px; border-radius:50%; }
+
+.timeline{ width:100%; max-width:720px; display:flex; flex-direction:column; gap:.35rem; margin-bottom:2rem; }
+.slot{
+  display:flex; align-items:center; gap:.9rem; padding:.6rem .9rem; border-radius:10px;
+  border:1px dashed var(--line); min-height:46px; transition: border-color .25s var(--ease), background .25s var(--ease);
+}
+.slot.filled{ border-style: solid; background: rgba(251,243,231,.04); }
+.slot.dragover{ border-color: var(--mint); background: rgba(143,211,199,.08); }
+.slot .slot-hour{ font-size:.76rem; color:rgba(251,243,231,.45); width:52px; flex-shrink:0; }
+.slot .slot-content{ flex:1; font-size:.9rem; display:flex; align-items:center; gap:.5rem; }
+.slot .slot-remove{ background:none; border:none; color:rgba(251,243,231,.35); font-size:.9rem; }
+.slot .slot-remove:hover{ color: var(--coral); }
+.slot.now-slot{ border-color: var(--gold); }
+
+/* ---------- brainstorm ---------- */
+
+.brainstorm{ max-width:560px; padding-top:1.6rem; border-top:1px solid var(--line); }
+.brainstorm-row{ display:flex; gap:.7rem; flex-wrap:wrap; }
+.brainstorm-row .field-input{ flex:1; min-width:200px; }
+.brainstorm-output{ margin-top:1rem; font-family:var(--font-display); font-style:italic; font-size:1.05rem; line-height:1.55; color:rgba(251,243,231,.85); min-height:1.2em; }
+
+/* ---------- today / quest log ---------- */
+
+#today-list{ width:100%; max-width:560px; display:flex; flex-direction:column; gap:.5rem; }
+.quest{
+  display:flex; align-items:center; gap:.9rem; padding:.8rem 1rem; border-radius:12px;
+  border:1px solid var(--line); background: rgba(251,243,231,.03);
+}
+.quest.done{ opacity:.55; }
+.quest.done .quest-label{ text-decoration: line-through; }
+.quest input[type="checkbox"]{ width:20px; height:20px; accent-color: var(--mint); }
+.quest .quest-hour{ font-size:.76rem; color:rgba(251,243,231,.45); width:52px; flex-shrink:0; }
+.quest .quest-label{ flex:1; font-size:.94rem; }
+.quest .quest-xp{ font-size:.72rem; color: var(--gold); }
+.empty-note{ color:rgba(251,243,231,.5); font-size:.92rem; max-width:44ch; }
+.empty-note a{ color: var(--mint); }
+
+/* ---------- vibe check ---------- */
+
+.slider-block{ width:100%; max-width:460px; }
+#vibe-slider{ width:100%; accent-color: var(--coral); height:6px; }
+.slider-readout{ margin-top:.6rem; font-family: var(--font-display); font-size:1.4rem; }
+
+.mood-grid{ display:flex; gap:.6rem; }
+.mood-btn{ font-size:1.6rem; padding:.5rem .7rem; border-radius:12px; border:1px solid var(--line); background:rgba(251,243,231,.04); transition: border-color .25s var(--ease), transform .2s var(--ease); }
+.mood-btn:hover{ transform: translateY(-2px); }
+.mood-btn.selected{ border-color: var(--gold); background: rgba(245,185,66,.16); }
+
+.vibe-confirm{ margin-top:1rem; font-size:.9rem; color: var(--mint); min-height:1.2em; }
+
+/* ---------- stats ---------- */
+
+.streak-row{ font-family: var(--font-display); font-size:1.6rem; }
+
+#level-bars{ width:100%; max-width:560px; display:flex; flex-direction:column; gap:.9rem; }
+.level-row .level-label{ display:flex; justify-content:space-between; font-size:.82rem; margin-bottom:.35rem; }
+.level-row .level-track{ height:7px; border-radius:4px; background: rgba(251,243,231,.1); overflow:hidden; }
+.level-row .level-fill{ height:100%; border-radius:4px; transition: width .8s var(--ease); }
+
+#journal-list{ width:100%; max-width:560px; display:flex; flex-direction:column; gap:.5rem; }
+.journal-row{ display:flex; align-items:center; gap:.9rem; padding:.7rem 1rem; border-radius:10px; border:1px solid var(--line); background: rgba(251,243,231,.03); font-size:.86rem; }
+.journal-row .j-date{ width:74px; color:rgba(251,243,231,.5); flex-shrink:0; }
+.journal-row .j-pct{ font-family: var(--font-display); width:48px; flex-shrink:0; }
+.journal-row .j-note{ flex:1; color:rgba(251,243,231,.7); }
+
+@media (max-width: 640px){
+  .screen{ padding: 5vh 6vw 8vh; }
+  #tabbar{ padding: 1rem 6vw; }
+}
+
+@media (prefers-reduced-motion: reduce){
+  *{ animation-duration:.001ms !important; transition-duration:.001ms !important; }
+}
+
+</style>
+</head>
+<body>
+
+  <div id="sky" aria-hidden="true">
+    <div id="sky-gradient"></div>
+    <div id="sun"></div>
+    <div id="horizon"></div>
+  </div>
+
+  <!-- ░░ ONBOARDING — Alter Ego Creator (first run only) ░░ -->
+  <section class="screen active" id="screen-onboard">
+    <p class="eyebrow">before you sandbox anything</p>
+    <h1 class="display">Who's playing today<span class="dot">?</span></h1>
+    <p class="lede">Make a quick Alter Ego. It's the character who lives out your blueprint — not the real you, the one you're aiming at.</p>
+
+    <div class="onboard-grid">
+      <div>
+        <label class="field-label" for="input-name">Their name</label>
+        <input class="field-input" id="input-name" maxlength="24" placeholder="Cozy Artist Me">
+      </div>
+
+      <div>
+        <label class="field-label">Pick their mark</label>
+        <div class="emoji-grid" id="emoji-grid"></div>
+      </div>
+
+      <div>
+        <label class="field-label">Pick their vibe</label>
+        <div class="vibe-grid" id="vibe-grid"></div>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" id="btn-create-ego">Create & enter the sandbox →</button>
+  </section>
+
+  <!-- ░░ MAIN APP ░░ -->
+  <div id="app-shell">
+    <nav id="tabbar">
+      <button class="tab active" data-tab="home">Home</button>
+      <button class="tab" data-tab="blueprint">Blueprint</button>
+      <button class="tab" data-tab="today">Today</button>
+      <button class="tab" data-tab="vibecheck">Vibe Check</button>
+      <button class="tab" data-tab="stats">Stats</button>
+    </nav>
+
+    <!-- HOME -->
+    <section class="screen" id="screen-home">
+      <div class="ego-card" id="ego-card"></div>
+      <p class="eyebrow" style="margin-top:2.2rem;">right now</p>
+      <p class="now-line" id="now-line">—</p>
+      <div id="home-today-preview"></div>
+    </section>
+
+    <!-- BLUEPRINT -->
+    <section class="screen" id="screen-blueprint">
+      <p class="eyebrow">your template — build it once, run it daily</p>
+      <h2 class="display section-title">The Blueprint</h2>
+      <p class="lede small">Tap a block, then tap an hour to place it. (Mouse users can drag too.) One block per hour.</p>
+
+      <div class="library" id="block-library"></div>
+
+      <div class="timeline" id="blueprint-timeline"></div>
+
+      <div class="brainstorm">
+        <p class="eyebrow">stuck?</p>
+        <p class="lede small" style="margin-bottom:.8rem;">Give it three words. Get a starting point — not an answer.</p>
+        <div class="brainstorm-row">
+          <input class="field-input" id="brainstorm-input" placeholder="tired, creative, rainy">
+          <button class="btn btn-ghost" id="btn-brainstorm">Brainstorm my vibe ✦</button>
+        </div>
+        <p class="brainstorm-output" id="brainstorm-output"></p>
+      </div>
+    </section>
+
+    <!-- TODAY -->
+    <section class="screen" id="screen-today">
+      <p class="eyebrow" id="today-date">—</p>
+      <h2 class="display section-title">Today's Quest Log</h2>
+      <div id="today-list"></div>
+    </section>
+
+    <!-- VIBE CHECK -->
+    <section class="screen" id="screen-vibecheck">
+      <p class="eyebrow">end of day</p>
+      <h2 class="display section-title">Vibe Check</h2>
+      <p class="lede small">How close did today land to the blueprint?</p>
+
+      <div class="slider-block">
+        <input type="range" min="0" max="100" value="50" id="vibe-slider">
+        <p class="slider-readout"><span id="vibe-pct">50</span>% perfect</p>
+      </div>
+
+      <p class="field-label" style="margin-top:1.6rem;">Mood</p>
+      <div class="mood-grid" id="mood-grid"></div>
+
+      <label class="field-label" style="margin-top:1.6rem;" for="vibe-note">One line, optional</label>
+      <textarea class="field-input" id="vibe-note" rows="2" maxlength="140" placeholder="what made or broke today"></textarea>
+
+      <button class="btn btn-primary" id="btn-submit-vibe" style="margin-top:1.6rem;">Log today ↓</button>
+      <p class="vibe-confirm" id="vibe-confirm"></p>
+    </section>
+
+    <!-- STATS -->
+    <section class="screen" id="screen-stats">
+      <p class="eyebrow">your sandbox, over time</p>
+      <h2 class="display section-title">Stats</h2>
+
+      <div class="streak-row" id="streak-row"></div>
+
+      <p class="field-label" style="margin-top:1.8rem;">Levels</p>
+      <div id="level-bars"></div>
+
+      <p class="field-label" style="margin-top:1.8rem;">Recent days</p>
+      <div id="journal-list"></div>
+    </section>
+  </div>
+
+  <script>
+/* ============================================================
+   MY SANDBOX DAY
+   Vanilla JS, no build step. Everything persists in localStorage
+   under one key so the whole app survives a refresh / tomorrow.
+   ============================================================ */
+
+const $ = (id) => document.getElementById(id);
+const STORAGE_KEY = "sandbox_day_v1";
+const HOURS = Array.from({ length: 18 }, (_, i) => i + 6); // 6am .. 11pm
+
+const PILLARS = {
+  wellness: { label: "Wellness", color: "var(--mint)" },
+  hobby:    { label: "Hobby",    color: "var(--gold)" },
+  social:   { label: "Social",   color: "var(--coral)" },
+  growth:   { label: "Growth",   color: "var(--violet)" },
+  rest:     { label: "Rest",     color: "var(--paper)" },
+};
+
+const BLOCK_LIBRARY = [
+  { id: "meditate", pillar: "wellness", label: "Meditate", emoji: "☀️" },
+  { id: "workout",  pillar: "wellness", label: "Move your body", emoji: "🏃" },
+  { id: "skincare", pillar: "wellness", label: "Skincare ritual", emoji: "🧴" },
+  { id: "draw",     pillar: "hobby",    label: "Make something", emoji: "🎨" },
+  { id: "music",    pillar: "hobby",    label: "Play or make music", emoji: "🎧" },
+  { id: "read",     pillar: "hobby",    label: "Read for fun", emoji: "📖" },
+  { id: "call",     pillar: "social",   label: "Call someone", emoji: "📞" },
+  { id: "hangout",  pillar: "social",   label: "Hang out IRL", emoji: "🧑‍🤝‍🧑" },
+  { id: "checkin",  pillar: "social",   label: "Check in on a friend", emoji: "💬" },
+  { id: "study",    pillar: "growth",   label: "Learn something", emoji: "📚" },
+  { id: "journal",  pillar: "growth",   label: "Journal", emoji: "✍️" },
+  { id: "goal",     pillar: "growth",   label: "Work on a goal", emoji: "🎯" },
+  { id: "nap",      pillar: "rest",     label: "Nap", emoji: "😴" },
+  { id: "walk",     pillar: "rest",     label: "Walk outside", emoji: "🌿" },
+  { id: "nothing",  pillar: "rest",     label: "Do absolutely nothing", emoji: "🌙" },
+  { id: "coffee",   pillar: "rest",     label: "Perfect coffee or tea", emoji: "☕" },
+];
+
+const EGO_EMOJIS = ["👑","🎨","🌙","⚡","🌱","🔥","🧘","🚀","🦋","🎧"];
+const VIBES = ["Future CEO Me", "Cozy Artist Me", "Night Owl Dreamer", "Wildcard Me", "Soft Life Me", "Main Character Me"];
+const MOODS = ["😩","😐","🙂","😊","🤩"];
+
+/* ------------------------------------------------------------
+   STORAGE
+   ------------------------------------------------------------ */
+
+function todayStr() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function defaultData() {
+  return {
+    alterEgo: null,                          // { name, emoji, vibe }
+    blueprint: [],                           // [{ hour, blockId }]
+    progress: { xp: { wellness:0, hobby:0, social:0, growth:0, rest:0 }, streak: 0, lastLogDate: null },
+    today: { date: todayStr(), completed: [] },
+    journal: [],                             // [{ date, pct, mood, note }]
+  };
+}
+
+function loadData() {
+  let data;
+  try {
+    data = JSON.parse(localStorage.getItem(STORAGE_KEY)) || defaultData();
+  } catch (e) {
+    data = defaultData();
+  }
+  // roll over to a fresh quest log on a new day, without touching XP/streak/journal
+  if (data.today.date !== todayStr()) {
+    data.today = { date: todayStr(), completed: [] };
+    saveData(data);
+  }
+  return data;
+}
+
+function saveData(data) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  } catch (e) { /* storage unavailable — app still runs in-memory for this session */ }
+}
+
+let data = loadData();
+
+/* ------------------------------------------------------------
+   THE LIVING SKY — now tracks the real clock, not a quiz.
+   ------------------------------------------------------------ */
+
+const SKY_STAGES = [
+  { end: 5,  css: "linear-gradient(180deg,#0f1226 0%, #1a1c3d 55%, #2c1250 100%)" },  // night
+  { end: 8,  css: "linear-gradient(180deg,#1b2255 0%, #7a3f7f 55%, #f2a15f 100%)" },  // dawn
+  { end: 17, css: "linear-gradient(180deg,#1e6091 0%, #4f9dde 55%, #eaf6ff 100%)" },  // day
+  { end: 20, css: "linear-gradient(180deg,#2c3d82 0%, #b06fae 55%, #f2765b 100%)" },  // dusk
+  { end: 24, css: "linear-gradient(180deg,#0f1226 0%, #2c1250 55%, #6c3483 100%)" },  // night
+];
+
+function updateSky() {
+  const now = new Date();
+  const hourFloat = now.getHours() + now.getMinutes() / 60;
+  const stage = SKY_STAGES.find((s) => hourFloat <= s.end) || SKY_STAGES[SKY_STAGES.length - 1];
+  $("sky-gradient").style.background = stage.css;
+
+  const progress = hourFloat / 24;
+  const left = 4 + progress * 92;
+  const top = 82 - Math.sin(progress * Math.PI) * 62;
+  $("sun").style.left = left + "%";
+  $("sun").style.top = Math.max(6, top) + "%";
+}
+
+/* ------------------------------------------------------------
+   SCREEN / TAB NAVIGATION
+   ------------------------------------------------------------ */
+
+function showOnboardIfNeeded() {
+  if (data.alterEgo) {
+    $("screen-onboard").classList.remove("active");
+    $("app-shell").style.display = "block";
+    goToTab("home");
+  } else {
+    $("screen-onboard").classList.add("active");
+    $("app-shell").style.display = "none";
+  }
+}
+
+function goToTab(name) {
+  document.querySelectorAll("#app-shell .screen").forEach((s) => s.classList.remove("active"));
+  $("screen-" + name).classList.add("active");
+  document.querySelectorAll(".tab").forEach((t) => t.classList.toggle("active", t.dataset.tab === name));
+
+  if (name === "home") renderHome();
+  if (name === "blueprint") renderBlueprintScreen();
+  if (name === "today") renderToday();
+  if (name === "stats") renderStats();
+}
+
+document.querySelectorAll(".tab").forEach((t) => t.addEventListener("click", () => goToTab(t.dataset.tab)));
+
+/* ------------------------------------------------------------
+   ONBOARDING
+   ------------------------------------------------------------ */
+
+let pickedEmoji = null, pickedVibe = null;
+
+function renderOnboardOptions() {
+  const eg = $("emoji-grid");
+  eg.innerHTML = "";
+  EGO_EMOJIS.forEach((e) => {
+    const b = document.createElement("button");
+    b.className = "pill-choice";
+    b.textContent = e;
+    b.addEventListener("click", () => {
+      pickedEmoji = e;
+      eg.querySelectorAll(".pill-choice").forEach((x) => x.classList.remove("selected"));
+      b.classList.add("selected");
+    });
+    eg.appendChild(b);
+  });
+
+  const vg = $("vibe-grid");
+  vg.innerHTML = "";
+  VIBES.forEach((v) => {
+    const b = document.createElement("button");
+    b.className = "pill-choice";
+    b.textContent = v;
+    b.addEventListener("click", () => {
+      pickedVibe = v;
+      vg.querySelectorAll(".pill-choice").forEach((x) => x.classList.remove("selected"));
+      b.classList.add("selected");
+    });
+    vg.appendChild(b);
+  });
+}
+
+$("btn-create-ego").addEventListener("click", () => {
+  const name = $("input-name").value.trim() || "Unnamed Main Character";
+  if (!pickedEmoji) pickedEmoji = EGO_EMOJIS[0];
+  if (!pickedVibe) pickedVibe = VIBES[0];
+  data.alterEgo = { name, emoji: pickedEmoji, vibe: pickedVibe };
+  saveData(data);
+  showOnboardIfNeeded();
+});
+
+/* ------------------------------------------------------------
+   HOME
+   ------------------------------------------------------------ */
+
+function renderHome() {
+  const ego = data.alterEgo;
+  $("ego-card").innerHTML = `
+    <div class="ego-emoji">${ego.emoji}</div>
+    <div>
+      <div class="ego-name">${ego.name}</div>
+      <div class="ego-vibe">${ego.vibe}</div>
+    </div>`;
+
+  const now = new Date();
+  $("now-line").textContent = `It's ${formatHour(now.getHours())}. ${blueprintCountLine()}`;
+
+  const preview = $("home-today-preview");
+  const items = todaysBlocks();
+  if (items.length === 0) {
+    preview.innerHTML = `<p class="empty-note">No blueprint yet. Head to <strong>Blueprint</strong> and place a few blocks — that's what shows up here every day.</p>`;
+    return;
+  }
+  const doneCount = items.filter((i) => data.today.completed.includes(i.hour)).length;
+  preview.innerHTML = `<p class="lede small" style="margin-bottom:.6rem;">${doneCount} / ${items.length} done today. See the full quest log under <strong>Today</strong>.</p>`;
+}
+
+function blueprintCountLine() {
+  return data.blueprint.length === 0
+    ? "Your sandbox is still empty."
+    : `Your blueprint has ${data.blueprint.length} block${data.blueprint.length === 1 ? "" : "s"} in it.`;
+}
+
+function formatHour(h) {
+  const period = h >= 12 ? "PM" : "AM";
+  const h12 = h % 12 === 0 ? 12 : h % 12;
+  return `${h12}${period}`;
+}
+
+/* ------------------------------------------------------------
+   BLUEPRINT BUILDER
+   ------------------------------------------------------------ */
+
+let selectedBlockId = null;
+
+function renderBlockLibrary() {
+  const lib = $("block-library");
+  lib.innerHTML = "";
+  BLOCK_LIBRARY.forEach((block) => {
+    const card = document.createElement("button");
+    card.className = "block-card";
+    card.draggable = true;
+    card.dataset.blockId = block.id;
+    card.innerHTML = `<span class="swatch" style="background:${PILLARS[block.pillar].color}"></span>${block.emoji} ${block.label}`;
+    card.addEventListener("click", () => {
+      selectedBlockId = selectedBlockId === block.id ? null : block.id;
+      lib.querySelectorAll(".block-card").forEach((c) => c.classList.toggle("selected", c.dataset.blockId === selectedBlockId));
+    });
+    card.addEventListener("dragstart", (e) => e.dataTransfer.setData("text/plain", block.id));
+    lib.appendChild(card);
+  });
+}
+
+function renderBlueprintScreen() {
+  const tl = $("blueprint-timeline");
+  tl.innerHTML = "";
+  const nowHour = new Date().getHours();
+
+  HOURS.forEach((hour) => {
+    const existing = data.blueprint.find((b) => b.hour === hour);
+    const slot = document.createElement("div");
+    slot.className = "slot" + (existing ? " filled" : "") + (hour === nowHour ? " now-slot" : "");
+    slot.dataset.hour = hour;
+
+    const label = existing ? BLOCK_LIBRARY.find((b) => b.id === existing.blockId) : null;
+    slot.innerHTML = `
+      <span class="slot-hour">${formatHour(hour)}</span>
+      <span class="slot-content">${label ? `${label.emoji} ${label.label}` : ""}</span>
+      ${existing ? `<button class="slot-remove" title="Remove">✕</button>` : ""}`;
+
+    slot.addEventListener("click", (e) => {
+      if (e.target.classList.contains("slot-remove")) {
+        data.blueprint = data.blueprint.filter((b) => b.hour !== hour);
+        saveData(data);
+        renderBlueprintScreen();
+        return;
+      }
+      if (selectedBlockId) {
+        placeBlock(hour, selectedBlockId);
+        selectedBlockId = null;
+        renderBlockLibrary();
+        renderBlueprintScreen();
+      }
+    });
+
+    slot.addEventListener("dragover", (e) => { e.preventDefault(); slot.classList.add("dragover"); });
+    slot.addEventListener("dragleave", () => slot.classList.remove("dragover"));
+    slot.addEventListener("drop", (e) => {
+      e.preventDefault();
+      slot.classList.remove("dragover");
+      const blockId = e.dataTransfer.getData("text/plain");
+      if (blockId) { placeBlock(hour, blockId); renderBlueprintScreen(); }
+    });
+
+    tl.appendChild(slot);
+  });
+
+  renderBlockLibrary();
+}
+
+function placeBlock(hour, blockId) {
+  data.blueprint = data.blueprint.filter((b) => b.hour !== hour);
+  data.blueprint.push({ hour, blockId });
+  saveData(data);
+}
+
+/* ------------------------------------------------------------
+   BRAINSTORM MY VIBE — local generator.
+   Swap in a real API call here if you have a key: replace the
+   body of generateVibeSuggestion() with a fetch() to your
+   OpenAI/Gemini endpoint using the same three words as input.
+   ------------------------------------------------------------ */
+
+function generateVibeSuggestion(words) {
+  const [a, b, c] = words;
+  const openers = [
+    `Start small: something ${a} doesn't need to be fixed, just held for an hour.`,
+    `Lean into ${a} instead of fighting it — that's the actual material you're working with today.`,
+    `${cap(a)} isn't a problem to solve, it's just today's weather.`,
+  ];
+  const middles = [
+    `Let that turn ${b} — one block, twenty minutes, nothing scheduled after it.`,
+    `Somewhere in the next few hours, make room for ${b}, even a small version of it.`,
+    `Feed the ${b} part on purpose, before the day decides for you.`,
+  ];
+  const closers = [
+    `If the ${c} shows up, that's not a distraction — that's the blueprint working.`,
+    `End on ${c}, deliberately, so the day has a shape instead of just an ending.`,
+    `Let ${c} be the last thing, and call that enough.`,
+  ];
+  const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+  return `${pick(openers)} ${pick(middles)} ${pick(closers)}`;
+}
+
+function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+
+$("btn-brainstorm").addEventListener("click", () => {
+  const raw = $("brainstorm-input").value.trim();
+  if (!raw) { $("brainstorm-output").textContent = "Give it three words first — mood, weather, whatever's true right now."; return; }
+  const words = raw.split(/[,\s]+/).filter(Boolean).slice(0, 3);
+  while (words.length < 3) words.push(words[words.length - 1] || "quiet");
+  $("brainstorm-output").textContent = generateVibeSuggestion(words);
+});
+
+/* ------------------------------------------------------------
+   TODAY — the blueprint, turned into a checklist that earns XP.
+   ------------------------------------------------------------ */
+
+function todaysBlocks() {
+  return data.blueprint
+    .slice()
+    .sort((a, b) => a.hour - b.hour)
+    .map((b) => ({ ...b, block: BLOCK_LIBRARY.find((x) => x.id === b.blockId) }))
+    .filter((b) => b.block);
+}
+
+function renderToday() {
+  $("today-date").textContent = new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" });
+  const list = $("today-list");
+  list.innerHTML = "";
+  const items = todaysBlocks();
+
+  if (items.length === 0) {
+    list.innerHTML = `<p class="empty-note">Nothing here yet — go build your <a href="#" id="link-to-blueprint">Blueprint</a> first.</p>`;
+    $("link-to-blueprint").addEventListener("click", (e) => { e.preventDefault(); goToTab("blueprint"); });
+    return;
+  }
+
+  items.forEach(({ hour, block }) => {
+    const done = data.today.completed.includes(hour);
+    const row = document.createElement("label");
+    row.className = "quest" + (done ? " done" : "");
+    row.innerHTML = `
+      <input type="checkbox" ${done ? "checked" : ""}>
+      <span class="quest-hour">${formatHour(hour)}</span>
+      <span class="quest-label">${block.emoji} ${block.label}</span>
+      <span class="quest-xp">+10 ${PILLARS[block.pillar].label.toUpperCase()}</span>`;
+    row.querySelector("input").addEventListener("change", (e) => toggleQuest(hour, block.pillar, e.target.checked));
+    list.appendChild(row);
+  });
+}
+
+function toggleQuest(hour, pillar, checked) {
+  const idx = data.today.completed.indexOf(hour);
+  if (checked && idx === -1) {
+    data.today.completed.push(hour);
+    data.progress.xp[pillar] += 10;
+  } else if (!checked && idx !== -1) {
+    data.today.completed.splice(idx, 1);
+    data.progress.xp[pillar] = Math.max(0, data.progress.xp[pillar] - 10);
+  }
+  saveData(data);
+  renderToday();
+}
+
+/* ------------------------------------------------------------
+   VIBE CHECK
+   ------------------------------------------------------------ */
+
+let selectedMood = null;
+
+function renderMoodGrid() {
+  const mg = $("mood-grid");
+  mg.innerHTML = "";
+  MOODS.forEach((m) => {
+    const b = document.createElement("button");
+    b.className = "mood-btn";
+    b.textContent = m;
+    b.addEventListener("click", () => {
+      selectedMood = m;
+      mg.querySelectorAll(".mood-btn").forEach((x) => x.classList.remove("selected"));
+      b.classList.add("selected");
+    });
+    mg.appendChild(b);
+  });
+}
+
+$("vibe-slider").addEventListener("input", (e) => { $("vibe-pct").textContent = e.target.value; });
+
+$("btn-submit-vibe").addEventListener("click", () => {
+  const pct = Number($("vibe-slider").value);
+  const note = $("vibe-note").value.trim();
+  const date = todayStr();
+
+  const existingIdx = data.journal.findIndex((j) => j.date === date);
+  const entry = { date, pct, mood: selectedMood || "🙂", note };
+  if (existingIdx !== -1) data.journal[existingIdx] = entry; else data.journal.push(entry);
+
+  updateStreak(date);
+  saveData(data);
+
+  $("vibe-confirm").textContent = `Logged. ${data.progress.streak} day streak.`;
+});
+
+function updateStreak(date) {
+  const last = data.progress.lastLogDate;
+  if (last === date) return; // already logged today, no change
+  if (last) {
+    const yesterday = new Date(date);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yStr = yesterday.toISOString().slice(0, 10);
+    data.progress.streak = last === yStr ? data.progress.streak + 1 : 1;
+  } else {
+    data.progress.streak = 1;
+  }
+  data.progress.lastLogDate = date;
+}
+
+/* ------------------------------------------------------------
+   STATS
+   ------------------------------------------------------------ */
+
+function levelFromXP(xp) {
+  return { level: Math.floor(xp / 50) + 1, withinLevel: xp % 50 };
+}
+
+function renderStats() {
+  $("streak-row").textContent = data.progress.streak > 0
+    ? `🔥 ${data.progress.streak} day streak`
+    : `Log a Vibe Check to start a streak`;
+
+  const bars = $("level-bars");
+  bars.innerHTML = "";
+  Object.keys(PILLARS).forEach((key) => {
+    const { level, withinLevel } = levelFromXP(data.progress.xp[key]);
+    const row = document.createElement("div");
+    row.className = "level-row";
+    row.innerHTML = `
+      <div class="level-label"><span>${PILLARS[key].label}</span><span>Lv. ${level}</span></div>
+      <div class="level-track"><div class="level-fill" style="width:${(withinLevel / 50) * 100}%; background:${PILLARS[key].color}"></div></div>`;
+    bars.appendChild(row);
+  });
+
+  const jlist = $("journal-list");
+  jlist.innerHTML = "";
+  const recent = data.journal.slice().reverse().slice(0, 6);
+  if (recent.length === 0) {
+    jlist.innerHTML = `<p class="empty-note">No days logged yet — do a Vibe Check tonight.</p>`;
+  } else {
+    recent.forEach((j) => {
+      const row = document.createElement("div");
+      row.className = "journal-row";
+      row.innerHTML = `<span class="j-date">${j.date.slice(5)}</span><span>${j.mood}</span><span class="j-pct">${j.pct}%</span><span class="j-note">${j.note || ""}</span>`;
+      jlist.appendChild(row);
+    });
+  }
+}
+
+/* ------------------------------------------------------------
+   INIT
+   ------------------------------------------------------------ */
+
+renderOnboardOptions();
+renderMoodGrid();
+showOnboardIfNeeded();
+updateSky();
+setInterval(updateSky, 60000);
+
+</script>
+</body>
+</html>
